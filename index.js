@@ -23,6 +23,7 @@ async function run(){
 
         const productCollection = client.db('agro_machineries').collection('product');
         const orderCollection = client.db('agro_machineries').collection('order');
+        const reviewCollection = client.db('agro_machineries').collection('review');
 
         // get method to find all product
         app.get('/product', async(req, res)=>{
@@ -45,12 +46,24 @@ async function run(){
           res.send(result);
         })
 
+        // get method for the order
         app.get('/order/:email', async (req, res) => {
           const mail = req.params.email;
           const query = ({ email : mail });
           const product = await orderCollection.findOne(query);
           res.send(product);
         });
+
+        app.post('/review', async (req, res) => {
+          const reviews = req.body;
+          const result = await reviewCollection.insertOne(reviews);
+          res.send(result);
+        })
+
+        app.get('/review', async(req, res)=>{
+          const reviews = await reviewCollection.find().toArray();
+          res.send(reviews);
+      });
         
 
     }
