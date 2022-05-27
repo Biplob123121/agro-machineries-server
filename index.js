@@ -128,6 +128,8 @@ async function run(){
           res.send(reviews.reverse());
       });
 
+     
+     
       //api for user
 
       app.get('/user', VerifyJwt, async (req, res) => {
@@ -159,6 +161,8 @@ async function run(){
         }
   
       });
+
+      // for the user update
 
       app.put('/user/:email', async (req, res) => {
         const email = req.params.email;
