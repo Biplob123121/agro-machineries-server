@@ -43,6 +43,7 @@ async function run(){
         const orderCollection = client.db('agro_machineries').collection('order');
         const reviewCollection = client.db('agro_machineries').collection('review');
         const userCollection = client.db('agro_machineries').collection('user');
+        const paymentCollection = client.db('agro_machineries').collection('payment');
 
 
         app.post('/create-payment-intent', VerifyJwt, async(req, res) =>{
@@ -99,6 +100,23 @@ async function run(){
           res.send(result);
         });
 
+        app.patch('/order/:id', VerifyJwt, async(req, res) =>{
+          const id  = req.params.id;
+          const payment = req.body;
+          const filter = {_id: ObjectId(id)};
+          const updatedDoc = {
+            $set: {
+              paid: true,
+              transactionId: payment.transactionId
+            }
+          }
+    
+          const result = await paymentCollection.insertOne(payment);
+          const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+          res.send(updatedOrder);
+        })
+
+        //for the review
         app.post('/review', async (req, res) => {
           const reviews = req.body;
           const result = await reviewCollection.insertOne(reviews);
