@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -43,10 +44,29 @@ async function run(){
         const reviewCollection = client.db('agro_machineries').collection('review');
         const userCollection = client.db('agro_machineries').collection('user');
 
+
+        app.post('/create-payment-intent', VerifyJwt, async(req, res) =>{
+          const service = req.body;
+          const price = service.price;
+          const amount = price*100;
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount : amount,
+            currency: 'BDT',
+            payment_method_types:['card']
+          });
+          res.send({clientSecret: paymentIntent.client_secret})
+        });
+
         // get method to find all product
         app.get('/product', async(req, res)=>{
             const products = await productCollection.find().toArray();
             res.send(products);
+        });
+
+        app.post('/product', async (req, res) => {
+          const newProduct = req.body;
+          const result = await productCollection.insertOne(newProduct);
+          res.send(result);
         });
 
         // get method to find specific product
@@ -65,22 +85,29 @@ async function run(){
         })
 
         // get method for the order
-        app.get('/order/:email', async (req, res) => {
+        app.get('/dashboard/order/:email', async (req, res) => {
           const mail = req.params.email;
           const query = ({ email : mail });
-          const product = await orderCollection.findOne(query);
+          const product = await orderCollection.find(query).toArray();
           res.send(product);
+        });
+
+        app.get('/order/:id', async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: ObjectId(id) };
+          const result = await orderCollection.findOne(query);
+          res.send(result);
         });
 
         app.post('/review', async (req, res) => {
           const reviews = req.body;
           const result = await reviewCollection.insertOne(reviews);
           res.send(result);
-        })
+        });
 
         app.get('/review', async(req, res)=>{
           const reviews = await reviewCollection.find().toArray();
-          res.send(reviews);
+          res.send(reviews.reverse());
       });
 
       //api for user
