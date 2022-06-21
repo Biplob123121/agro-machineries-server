@@ -105,6 +105,7 @@ async function run(){
           res.send(result);
         });
 
+        // patch method for updating order
         app.patch('/order/:id', VerifyJwt, async(req, res) =>{
           const id  = req.params.id;
           const payment = req.body;
